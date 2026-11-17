@@ -1,0 +1,188 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+% The preceding line is only needed to identify funding in the first footnote. If that is unneeded, please comment it out.
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{float}
+
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+\begin{document}
+
+\title{Ant Colony Optimization Based Shortest Path Finding Algorithm\\
+{\footnotesize \textsuperscript{}}
+\thanks{}
+}
+
+\author{\IEEEauthorblockN{Vaibhav Verma}
+\IEEEauthorblockA{\textit{Department of Computing Technologies} \\
+\textit{SRM Institute Of Science and Technology}\\
+Chennai, India \\
+vv4834@srmist.edu.in}
+\and
+
+\IEEEauthorblockN{Kapish}
+\IEEEauthorblockA{\textit{Department of Computing Technologies} \\
+\textit{SRM Institute Of Science and Technology}\\
+Chennai, India \\
+ks4225@srmist.edu.in}
+}
+
+
+\maketitle
+
+\begin{abstract}
+The problem of finding the shortest path between two points is a fundamental problem in computer science and has wide applications in transportation, communication networks, robotics and route planning. This is a common task in many applications and algorithms such as Dijkstra’s algorithm and the A* algorithm are often used for this but they may become less flexible if the search space is large, complex or continuously changing. One such nature-inspired approach to optimization problems is Ant Colony Optimization (ACO).
+
+The ACO is based on the real ant behavior in search of food. Ants communicate indirectly by laying down trails of pheromones on the paths they take. The greater the amount of pheromone, the more likely another ant will choose that route. Over time, the colony will find more efficient and shorter routes. In the computational version of this process artificial ants explore different possible paths and update the pheromone values based on the quality of the solutions found.
+
+This background study is related to working principles of Ant Colony Optimization and its use for shortest path problem. It discusses important concepts like pheromone updating, heuristic information, path selection probability, evaporation rate and convergence. The benefits and limitations of ACO compared with the conventional shortest-path algorithms are also discussed in the research. The main objective is to understand the use of swarm intelligence in route optimization and the effectiveness of ACO in a dynamic and complex network environment.
+
+
+\end{abstract}
+
+\begin{IEEEkeywords}
+Ant Colony Optimization, Shortest-Path Problem, Swarm Intelligence, Path Optimization, Bio-inspired Algorithms
+\end{IEEEkeywords}
+
+
+\section{INTRODUCTION}
+
+One of the most fundamental problems in computer science is the shortest path optimization problem, which has important applications in transportation systems, communication networks, robotics, logistics and route planning. The main objective of this problem is to find the best path between two points minimizing distance, cost or time. Dijkstra’s algorithm and the A* algorithm are widely used to solve shortest path problems and provide optimal solutions in static environments. However, these approaches may not be appropriate for large-scale, dynamic and complex networks where the search space is changing frequently and requires adaptive optimization techniques.
+
+Ant Colony Optimization (ACO) is a nature inspired metaheuristic optimization technique that was proposed by Dorigo et al. based on the foraging behavior of real ant colonies. While foraging for food, ants indirectly communicate by laying down pheromone trails on paths. The paths with higher pheromone concentration are more likely to be selected and the colony can gradually find shorter and more efficient paths. This behavior is used in artificial ants in computational systems to explore possible solutions, update pheromone information and improve the quality of paths over multiple iterations \cite{dorigo1996}.
+
+ACO has been widely used to solve complex optimization and routing problems because of its flexibility and distributed search capability. Improvements such as Ant Colony System (ACS) proposed better pheromone updating and path selection strategies, improving convergence and solution quality compared to the original Ant System \cite{dorigo1997}. Furthermore, ACO-based shortest path approaches have been explored in dynamic routing environments, where network conditions are continuously changing, highlighting the effectiveness of swarm intelligence techniques for adaptive path optimization \cite{shortestpathaco}. In this paper, the working principles of ACO, such as pheromone initialization, heuristic information, transition probability, evaporation rate and convergence behavior are understood. At the same time, the advantages and limitations of ACO compared with conventional shortest path algorithms are analyzed.
+
+
+
+
+
+\section{Literature Review}
+
+Li et al. proposed an Intelligently Enhanced Ant Colony Optimization algorithm for mobile robot path planning. The method improved pheromone initialization and heuristic information to achieve faster convergence and better path quality \cite{ieaco2025}.
+
+Ma et al. introduced an Improved Trimming Ant Colony Optimization algorithm for mobile robot path planning. Their approach reduced unnecessary path nodes using trimming strategies and improved the efficiency of generated paths \cite{itaco2025}.
+
+Li et al. proposed a multi-strategy improved Ant Colony Optimization algorithm for robot path planning. The approach combined adaptive pheromone updating and optimization strategies to reduce premature convergence and improve search performance \cite{msgaco2025}.
+
+Li et al. developed an improved Q-evaluation Ant Colony Optimization algorithm for mobile robot path planning. Their method enhanced node evaluation and improved path search stability compared with traditional ACO methods \cite{iqaco2025}.
+
+Huang et al. proposed an improved ACO-based path planning approach for delivery robots. The study focused on improving obstacle avoidance, reducing search limitations and generating efficient navigation paths \cite{deliveryaco2025}.
+
+Shi et al. presented an improved Ant Colony Optimization approach for mobile robot path planning. Their work enhanced path optimization by modifying heuristic functions and pheromone update mechanisms \cite{robotaco2025}.
+
+Cui et al. proposed a multi-strategy adaptable Ant Colony Optimization algorithm for path planning. Their approach improved adaptability by dynamically adjusting optimization parameters during the search process \cite{adaptiveaco2025}.
+
+Zhuo et al. proposed a multi-strategy enhanced Ant Colony Optimization algorithm for mobile robot path planning. The method improved pheromone initialization, state transition probability and pheromone updating strategies to overcome local optimum problems \cite{mseaco2026}.
+
+Yu et al. proposed an enhanced Ant Colony Optimization algorithm for mobile robot path planning. The method improved convergence speed and path quality through optimized heuristic information and pheromone strategies \cite{enhancedaco2026}.
+
+Liu et al. introduced the Pheromone-Focused Ant Colony Optimization algorithm for path planning. Their approach improved pheromone distribution to reduce redundant exploration and enhance optimization performance \cite{pfaco2026}.
+
+Zeng et al. proposed a double-layer Ant Colony Optimization algorithm for robot navigation path planning. Their approach introduced improved scheduling mechanisms and angle constraints to generate stable and efficient paths \cite{idlaco2026}.
+
+Recent studies demonstrate that Ant Colony Optimization provides an effective approach for shortest path and routing problems. However, challenges such as convergence speed, parameter tuning and adaptation to highly dynamic environments still require further research.
+
+
+\section{Problem Description}
+
+The shortest path problem is the problem of finding the most efficient route between a source and destination node in a given network minimizing parameters such as distance, cost or travel time. Classical graph-based algorithms such as Dijkstra’s algorithm or A* can find optimal solutions for static networks, but may not perform well in large-scale, dynamic and complex environments with frequently changing network conditions. These scenarios exhibit a significantly larger search space and call for adaptive optimization techniques for efficient route discovery.
+
+The problem discussed in this study is to investigate the use of Ant Colony Optimization to solve the shortest path problems based on the principles of swarm intelligence. The goal is to create an optimization approach in which artificial ants search for possible ways iteratively, evaluate the quality of the paths with heuristic information, and update pheromone values to discover effective paths. Key challenges include reaching convergence more quickly, avoiding early convergence to poor paths, and being able to adapt to changes in the network. The work is based on the understanding of the contribution of ACO mechanisms such as the pheromone evaporation, path selection probability and heuristic guidance to effective shortest path optimization.
+
+
+
+\begin{thebibliography}{00}
+
+\bibitem{dorigo1996}
+M. Dorigo, V. Maniezzo, and A. Colorni,
+``Ant System: Optimization by a Colony of Cooperating Agents,''
+\textit{IEEE Transactions on Systems, Man, and Cybernetics--Part B},
+vol. 26, no. 1, pp. 29--41, 1996.
+
+\bibitem{dorigo1997}
+M. Dorigo and L. M. Gambardella,
+``Ant Colony System: A Cooperative Learning Approach to the Traveling Salesman Problem,''
+\textit{IEEE Transactions on Evolutionary Computation},
+vol. 1, no. 1, pp. 53--66, 1997.
+
+\bibitem{shortestpathaco}
+A. Colorni, M. Dorigo, and V. Maniezzo,
+``Distributed Optimization by Ant Colonies,''
+in \textit{Proceedings of the First European Conference on Artificial Life},
+Paris, France, pp. 134--142, 1991.
+
+
+\bibitem{ieaco2025}
+P. Li et al.,
+``An Intelligently Enhanced Ant Colony Optimization Algorithm for Global Path Planning of Mobile Robots,''
+\textit{Sensors},
+vol. 25, no. 5, 2025.
+
+\bibitem{itaco2025}
+J. Ma et al.,
+``Improved Trimming Ant Colony Optimization Algorithm for Mobile Robot Path Planning,''
+\textit{Algorithms},
+vol. 18, no. 5, 2025.
+
+\bibitem{msgaco2025}
+Z. Li et al.,
+``Research on Robot Path Planning Based on Multi-Strategy Improved Ant Colony Algorithm,''
+\textit{Information Sciences},
+2025.
+
+\bibitem{iqaco2025}
+D. Li et al.,
+``Research on Mobile Robot Path Planning Based on Improved Q-Evaluation Ant Colony Optimization Algorithm,''
+\textit{Engineering Applications of Artificial Intelligence},
+2025.
+
+\bibitem{deliveryaco2025}
+L. Huang et al.,
+``Path Planning for Delivery Robots Based on an Improved Ant Colony Optimization Algorithm,''
+\textit{Sensors},
+2025.
+
+\bibitem{robotaco2025}
+G. Shi et al.,
+``Improved Ant Colony Algorithm-Based Path Planning for Mobile Robots,''
+\textit{Proceedings of SPIE},
+2025.
+
+\bibitem{adaptiveaco2025}
+J. Cui et al.,
+``Multi-Strategy Adaptable Ant Colony Optimization Algorithm for Path Planning,''
+\textit{Expert Systems with Applications},
+2024.
+
+\bibitem{mseaco2026}
+Y. Zhuo et al.,
+``Path Planning for Mobile Robots Based on Multi-Strategy Enhanced Ant Colony Optimization Algorithm,''
+\textit{International Journal of Computational Intelligence Systems},
+2026.
+
+\bibitem{enhancedaco2026}
+L. Yu et al.,
+``An Enhanced Ant Colony Optimization Algorithm for Path Planning of a Mobile Robot,''
+\textit{Optimal Control Applications and Methods},
+2026.
+
+\bibitem{pfaco2026}
+Y. Liu et al.,
+``Pheromone-Focused Ant Colony Optimization Algorithm for Path Planning,''
+2026.
+
+\bibitem{idlaco2026}
+X. Zeng et al.,
+``I-DL-ACO: Double Layer Ant Colony Optimization for Robot Navigation Path Planning,''
+\textit{Robotics and Autonomous Systems},
+2026.
+
+\end{thebibliography}
+
+\end{document}
