@@ -1,72 +1,125 @@
 import tkinter as tk
 import unittest
-from app import App, teaching_graph, ant_position
+from app import App, EDGES, teaching_graph, ant_position, score_breakdown
 from aco import Colony, Parameters, dijkstra
 
 
 class TeachingTests(unittest.TestCase):
-    def test_motion_uses_edge_weights(self):
-        graph=teaching_graph()
-        self.assertEqual(ant_position(graph,['S','A','C','T'],3),('A','C',0.0,False))
-        self.assertTrue(ant_position(graph,['S','A','C','T'],10)[3])
-        self.assertFalse(ant_position(graph,['S','B','D','T'],10)[3])
-        self.assertTrue(ant_position(graph,['S','B','D','T'],15)[3])
-        self.assertEqual(dijkstra(graph,'S','T')[1],10)
+    def setUp(self):
+        self.root=tk.Tk(); self.root.withdraw()
+        self.app=App(self.root); self.app.popups_enabled=False
 
-    def test_split_round_matches_batch(self):
-        a=Colony(teaching_graph(),'S','T',Parameters(seed=7,beta=1))
-        b=Colony(teaching_graph(),'S','T',Parameters(seed=7,beta=1))
-        for _ in range(5):
-            before=a.pheromone.copy()
-            attempts,successful=a.construct_paths()
-            self.assertEqual(len(attempts),40)
-            self.assertEqual(a.pheromone,before)
-            a.finish_round(successful); b.step()
-            self.assertEqual(a.history,b.history)
-            self.assertEqual(a.pheromone,b.pheromone)
+    def tearDown(self):
+        self.app.reset();self.root.destroy()
 
-    def test_round_animation_and_manual_gate(self):
-        root=tk.Tk(); root.withdraw()
-        try:
-            app=App(root); app.rounds.set('2'); app.start(); app.pause()
-            self.assertEqual(len(app.canvas.find_withtag('ant')),40)
-            app.advance_time(1.1)
-            self.assertEqual(app.phase,'travel')
-            app.travel=12
-            self.assertGreater(app.arrived_count(),0)
-            self.assertLess(app.arrived_count(),40)
-            app.advance_time(100); self.assertEqual(app.phase,'compare')
-            app.advance_time(3); self.assertEqual(app.phase,'evaporate')
-            app.advance_time(1)
-            self.assertTrue(all(abs(t-.85)<1e-9 for t in app.display_tau.values()))
-            self.assertEqual(app.colony.iteration,0)
-            app.advance_time(1); self.assertEqual(app.phase,'deposit')
-            self.assertEqual(app.colony.iteration,1)
-            app.advance_time(3); self.assertEqual(app.phase,'review')
-            self.assertFalse(app.running)
-            app.advance_time(100); self.assertEqual(app.colony.iteration,1)
-            app.next_round(); app.pause()
-            for dt in [2,100,3,2,3]: app.advance_time(dt)
-            self.assertTrue(app.final)
-            expected=Colony(teaching_graph(),'S','T',Parameters(iterations=2,beta=1)); expected.run()
-            self.assertEqual(app.colony.pheromone,expected.pheromone)
-            self.assertEqual(app.colony.history,expected.history)
-            self.assertEqual(app.colony.cost,10)
-            app.reset(); self.assertIsNone(app.timer)
-        finally: root.destroy()
+    def start(self,rounds=5):
+        self.app.rounds.set(str(rounds)); self.app.start(); self.app.pause()
 
-    def test_show_best_only_uses_completed_rounds(self):
-        root=tk.Tk(); root.withdraw()
-        try:
-            app=App(root); app.start(); app.pause(); app.show_final()
-            self.assertFalse(app.final)
-            for dt in [2,100,3,2,3]: app.advance_time(dt)
-            self.assertEqual(app.phase,'review')
-            app.show_final()
-            self.assertTrue(app.final)
-            self.assertEqual(app.colony.iteration,1)
-            app.reset()
-        finally: root.destroy()
+    def arrive(self):
+        self.app.advance_time(3)
+        self.app.advance_time(1000)
+        self.app.refresh()
+        self.assertEqual(self.app.phase,'pending')
+
+    def test_default_genuinely_improves_after_first_round(self):
+        c=Colony(teaching_graph(),'S','T',Parameters(iterations=5,beta=1))
+        c.run()
+        self.assertEqual(len(teaching_graph()),14)
+        self.assertEqual(len(EDGES),23)
+        self.assertEqual(dijkstra(teaching_graph(),'S','T')[1],30)
+        self.assertEqual([r['best_cost'] for r in c.history],[33,32,30,30,30])
+
+    def test_travel_uses_distance(self):
+        g=teaching_graph();short=['S','A','D','G','J','T'];long=['S','B','E','H','K','T']
+        self.assertEqual(ant_position(g,short,6),('A','D',0.0,False))
+        self.assertTrue(ant_position(g,short,30)[3])
+        self.assertFalse(ant_position(g,long,30)[3])
+        self.assertTrue(ant_position(g,long,33)[3])
+
+    def test_scores_wait_for_click_and_update_once(self):
+        self.start();before=self.app.colony.pheromone.copy();self.arrive()
+        self.assertEqual(self.app.colony.iteration,0)
+        self.assertEqual(self.app.display_tau,before)
+        self.app.advance_time(1000)
+        self.assertEqual(self.app.colony.pheromone,before)
+        rows=self.app.score_rows.copy();self.app.update_scores()
+        for edge,row in rows.items():
+            self.assertAlmostEqual(row['remaining'],before[edge]*.7)
+            self.assertAlmostEqual(self.app.display_tau[edge],row['remaining']+row['reward'])
+        self.assertEqual(self.app.colony.iteration,1)
+        scores=self.app.colony.pheromone.copy()
+        self.app.update_scores();self.app.update_scores()
+        self.assertEqual(self.app.colony.iteration,1)
+        self.assertEqual(self.app.colony.pheromone,scores)
+        self.assertEqual(len(self.app.canvas.find_withtag('score_label')),23)
+        self.assertEqual(len(self.app.canvas.find_withtag('distance_label')),23)
+
+    def test_next_round_auto_applies_and_carries_scores(self):
+        self.start();self.arrive();self.app.close_popup()
+        expected=Colony(teaching_graph(),'S','T',Parameters(iterations=5,beta=1));expected.step()
+        self.app.next_round();self.app.pause()
+        self.assertEqual(self.app.colony.iteration,1)
+        self.assertEqual(self.app.before,expected.pheromone)
+        self.assertEqual(self.app.display_tau,expected.pheromone)
+        self.assertEqual(self.app.phase,'launch')
+        self.app.next_round()  # A double-click cannot skip an active round.
+        self.assertEqual(self.app.colony.iteration,1)
+        self.arrive();self.app.update_scores();scores=self.app.display_tau.copy()
+        self.app.next_round();self.app.pause()
+        self.assertEqual(self.app.colony.iteration,2)
+        self.assertEqual(self.app.before,scores)
+
+    def test_manual_and_automatic_updates_match_solver(self):
+        self.start(3)
+        expected=Colony(teaching_graph(),'S','T',Parameters(iterations=3,beta=1));expected.run()
+        for i in range(3):
+            self.arrive()
+            if i%2==0:self.app.update_scores()
+            if not self.app.final:self.app.next_round()
+            if self.app.running:self.app.pause()
+        self.assertTrue(self.app.final)
+        self.assertEqual(self.app.colony.history,expected.history)
+        self.assertEqual(self.app.colony.pheromone,expected.pheromone)
+
+    def test_no_reward_only_evaporates(self):
+        rows=score_breakdown({('A','B'):1.0,('B','C'):2.0},[])
+        self.assertEqual(rows[('A','B')]['new'],.7)
+        self.assertEqual(rows[('B','C')]['new'],1.4)
+        self.assertEqual(rows[('A','B')]['reward'],0)
+
+    def test_last_next_button_commits_pending_round(self):
+        self.start(1);self.arrive();self.app.next_round()
+        self.assertTrue(self.app.final)
+        self.assertEqual(self.app.colony.iteration,1)
+        self.assertEqual(self.app.colony.cost,33)
+        self.app.next_round();self.assertEqual(self.app.colony.iteration,1)
+
+    def test_popup_close_does_not_apply_scores(self):
+        self.start();self.app.popups_enabled=True;self.arrive()
+        self.assertIsNotNone(self.app.score_popup)
+        self.assertEqual(len(self.app.popup_tree.get_children()),23)
+        self.app.close_popup();self.assertEqual(self.app.colony.iteration,0)
+        self.app.update_scores();self.assertEqual(self.app.colony.iteration,1)
+        self.app.reset();self.assertIsNone(self.app.score_popup)
+
+    def test_autoplay_applies_pending_scores(self):
+        self.start(2);self.app.auto.set(True);self.arrive();self.app.cancel()
+        self.app.advance_time(5)
+        self.assertEqual(self.app.colony.iteration,1)
+        self.assertEqual(self.app.phase,'launch')
+        self.arrive();self.app.advance_time(5)
+        self.assertTrue(self.app.final)
+        self.assertEqual(self.app.colony.iteration,2)
+
+    def test_enable_autoplay_while_waiting(self):
+        self.start(2);self.arrive()
+        self.assertFalse(self.app.running)
+        self.app.auto.set(True);self.app.auto_changed()
+        self.assertTrue(self.app.running)
+        self.assertIsNotNone(self.app.timer)
+        self.app.auto.set(False);self.app.auto_changed()
+        self.assertFalse(self.app.running)
+        self.assertIsNone(self.app.timer)
 
 
-if __name__=='__main__': unittest.main()
+if __name__=='__main__':unittest.main()

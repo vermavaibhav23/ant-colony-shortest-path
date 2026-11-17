@@ -10,9 +10,9 @@ python app.py
 
 Requires Python 3.10+ with Tkinter. No third-party Python packages are required. The desktop app runs locally; this repository is not a browser-hosted app.
 
-- `python app.py` — simplified animated teaching demo
+- `python app.py` — larger teaching map with distance/score labels and explicit score updates
 - `python advanced_app.py` — original graph lab with custom graphs and CSV export
-- `python -m unittest -v` — 12 correctness and animation tests
+- `python -m unittest -v` — 18 correctness and animation tests
 - `python experiments.py` — reproduce the original benchmark
 
 ## Run your existing Music folder in VS Code (Windows PowerShell)
@@ -25,19 +25,27 @@ python app.py
 
 Python 3.10+ with Tkinter is required (included in standard python.org Windows installations). No pip installation is needed. If `python` is unavailable, use `py app.py`.
 
-## Simplified visual demo (default)
+## Interactive score-update demo (default)
 
-`python app.py` opens a large map with six nodes and eight roads, including cross-links. Edge labels are distances; the map is not drawn to scale. The upper direct route S–A–C–T has distance 10; the lower direct route S–B–D–T has distance 15. Cross-links allow other choices and possible dead ends.
+Run `python app.py`. The teaching map has **14 nodes and 23 undirected roads** arranged as a readable grid with cross-links. Every edge shows **D: distance** and **P: preference / pheromone score**. Scores are shown to two decimals on the map and four decimals in the update popup; the solver retains full floating-point precision.
 
-- **START** begins one round. Actual sampled ant paths are animated with small ant-shaped markers.
-- Ants leave in a short stream to remain visible. Travel time is proportional to cumulative edge distance, at the same distance rate for every ant. Launch delay only separates the markers; it does not affect the algorithm.
-- Arrived ants are removed from the map and counted at FOOD. Ants reaching dead ends stop, are counted as stuck and receive no pheromone reward.
-- One short explanation follows exploration, comparison, evaporation and reinforcement. The entire population is evaluated before trails are updated; early arrival does not trigger an early deposit.
-- The demo pauses after each complete round. Click **NEXT ROUND** to see the effect of the updated trails. Enable **Auto-play rounds** for continuous playback.
-- **PAUSE / RESUME** freezes or resumes the current animation. **Show best route** selects the cheapest solution from completed rounds and highlights it in green; it does not secretly compute additional rounds.
-- **Settings** contains ants, round count, seed and speed. Default: 40 ants, 5 rounds, alpha=1, beta=1, evaporation=0.3, Q=10, seed=42. Changing speed affects playback only. Ants/rounds/seed changes take effect on restart.
+The graph was chosen as a reproducible teaching example. With the default **40 ants, 5 rounds, seed 42, alpha=1, beta=1**, the real solver's best distances are **33, 32, 30, 30, 30**. Dijkstra independently confirms the optimum is 30 (S–A–D–G–J–T). There is no forced delay or injected optimum: other seeds or parameters can find the optimum earlier, later, or miss it.
 
-The teaching graph and beta=1 setting are separate from the original benchmark. The paper, original algorithm defaults and recorded benchmark results remain unchanged. Run `python -m unittest -v` to check the solver, weighted travel timing, phase transitions and round accounting.
+### Round workflow
+
+1. Click **START**. The opening pause displays the scores used for the new round. Ants then travel along their actual sampled paths; edge distances control their travel times. A small departure delay separates the markers.
+2. Wait until all attempts end (food reached or stuck). Scores stay unchanged throughout exploration. A nonmodal **Update preference scores** popup opens with each road's old score, remaining score after 30% evaporation, earned reward, and proposed new score. The preview itself does not change any score.
+3. Click **UPDATE SCORES** in the popup or main window. Each road updates exactly once: **new P = max(1e-12, old P × 0.70) + reward**. Each successful ant contributes **10 / its route distance** to every road it used. Failed attempts contribute nothing. Roads without rewards only evaporate.
+4. The new edge scores remain displayed. **NEXT ROUND** starts with these same scores. If you did not click Update scores (including if you closed the popup), Next round applies the pending update automatically before sampling the next population. Double-clicking cannot apply the same round twice.
+5. On the last round, **FINISH** applies any pending update and shows the best discovered route. **Show best route** can end earlier after a round, also applying its pending update. Dijkstra checks the answer only; it never guides the ants.
+
+**PAUSE / RESUME** controls movement. **Auto-play rounds** automatically commits pending scores and moves on after a four-second review delay. **Settings** contains ants (1–80), rounds (1–100), random seed and playback speed. Playback speed only affects animation.
+
+P is a pheromone preference score, not road distance or whole-path fitness. Smaller route distance means a better path; a larger P makes a road more attractive. Ant choice weights are P^alpha × (1 / D)^beta, normalized over allowed unvisited neighbours.
+
+Run `python -m unittest -v` for **18 tests**, including seeded improvement, pending updates, evaporation/reward accounting, popup dismissal, duplicate-click protection, score carry-over, autoplay and final-round handling.
+
+The paper and original benchmark results are retained as historical experiment artifacts; they do not describe this newer teaching map. The earlier explanation PDF also illustrates a previous six-node demo.
 
 ## Original advanced graph lab
 
