@@ -1,5 +1,26 @@
 # BIC — Ant Colony Optimization Based Shortest Path Finding Algorithm
 
+## Live demo and final journal
+
+**[Open the working browser demo](https://vaibhav-aco-pathfinder.nishverma11.chatgpt.site)** — public, no installation or localhost required.
+
+**[Read / download the final journal PDF](paper/BIC_Journal_Paper.pdf)** · [Overleaf LaTeX source](paper/main.tex)
+
+The journal is the completed project paper from the original benchmark. Its reported experiments are preserved; the later teaching interface is a separate demonstration.
+
+### Browser demo
+
+1. Click **Start exploration** to watch ants travel through the 14-node, 23-road graph.
+2. After all attempts finish, inspect each road's old score, 30% evaporation, successful-ant count, reward and new score.
+3. Click **Update scores**, or **Next round** to apply the pending update automatically exactly once.
+4. Use **Show best route** to highlight the best route found so far.
+
+Every edge displays distance (D) and pheromone (P). Stuck ants are counted separately and receive no reward. The browser uses the same Ant System rule as Python: `new P = max(1e-12, 0.70 * old P) + sum(10 / successful ant route distance)`.
+
+The browser defaults to **40 ants, 5 rounds, seed 1**, a reproducible teaching example with best distances **32, 32, 32, 30, 30**. It uses Mulberry32 random sampling; Python uses its own random generator, so matching seeds do not imply matching routes. Routes are sampled, never forced. Other settings can discover the optimum earlier, later, or miss it.
+
+Browser source is in [`web/`](web/). To preview it locally, run `python -m http.server 8000`, then open `http://localhost:8000/web/`. The public link above works without running any command. Browser engine checks: `node --test web/test-engine.mjs` (Node.js required only for these checks).
+
 ## Run from GitHub
 
 ```powershell
@@ -8,7 +29,7 @@ cd ant-colony-shortest-path
 python app.py
 ```
 
-Requires Python 3.10+ with Tkinter. No third-party Python packages are required. The desktop app runs locally; this repository is not a browser-hosted app.
+Requires Python 3.10+ with Tkinter. No third-party Python packages are required. The desktop app runs locally; the public browser version is linked above.
 
 - `python app.py` — larger teaching map with distance/score labels and explicit score updates
 - `python advanced_app.py` — original graph lab with custom graphs and CSV export
